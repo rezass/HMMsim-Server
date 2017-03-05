@@ -81,7 +81,7 @@ private:
 	public:
 		TraceMerger(const string& prefix, CompressionType compressionArg);
 		~TraceMerger();
-		bool readEntry(uint64 *timestamp, addrint *addr, uint8 *size);
+		bool readEntry(uint64 *timestamp, addrint *addr, uint8 *size, bool mocked);
 	};
 
 private:

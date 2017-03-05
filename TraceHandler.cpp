@@ -133,11 +133,13 @@ CompressedTraceReader::TraceMerger::~TraceMerger(){
 	delete [] sizeEntries;
 }
 
-bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *addr, uint8 *size){
-	static long testFileRead;
-	if (currentEntry == BUFFER_SIZE){
+bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *addr, uint8 *size, bool mocked){
+    if(!mocked)
+        return false;
+    static unsigned long testFileRead=0;
+	/*if (currentEntry == BUFFER_SIZE){
 		if (compression == GZIP){
-			testFileRead++;
+			//testFileRead++;
 			//cout<<"RD: "<<testFileRead<<endl;
 			int timestampRead = gzread(gzTimestampFile, timestampEntries, BUFFER_SIZE*sizeof(uint64))/sizeof(uint64);
 			int addressRead = gzread(gzAddressFile, addressEntries, BUFFER_SIZE*sizeof(addrint))/sizeof(addrint);
@@ -184,60 +186,65 @@ bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *a
 	if (lastEntry == currentEntry){
 		return false;
 	}
-	*timestamp = timestampEntries[currentEntry];
-//	if(testFileRead==0){
-//		*addr = 140606421075632;
-//	}
-//	else if(testFileRead==1){
-//		*addr = 140606423309184;
-//	}
-//	else if(testFileRead==2){
-//		*addr = 140724404281416;
-//	}
-//	else if(testFileRead==3){
-//		*addr = 140724404281464;
-//	}
-//	else if(testFileRead==4){
-//		*addr = 140606421075635;
-//	}
-//	else if(testFileRead==5){
-//		*addr = 140724404281456;
-//	}
-//	else if(testFileRead==6){
-//		*addr = 140606421090321;
-//	}
-//	else if(testFileRead==7){
-//		*addr = 140724404281448;
-//	}
-//	else if(testFileRead==8){
-//		*addr = 140606421090324;
-//	}
-//	else if(testFileRead==9){
-//		*addr = 140606421090326;
-//	}
-//	else if(testFileRead==10){
-//		*addr = 140724404281440;
-//	}
-//	else if(testFileRead==11){
-//		*addr =140737336764280;
-//	}
-//	else if (testFileRead<1500){
-//		*addr = 140724404281440;
-//	}
-//	else
-//		return false;
-	*addr = addressEntries[currentEntry];// REMOVED THIS LINE //TODO: UN-REMOVE THE LINE
-	*size = sizeEntries[currentEntry];
-//	cout<<*timestamp<<"  "<<*addr<<"   "<<*size<<endl;
+         
+	*timestamp = timestampEntries[currentEntry];*/
+	if(testFileRead==0){
+		*addr = 140606421075632;
+	}
+	else if(testFileRead==1){
+		*addr = 140606423309184;
+	}
+	else if(testFileRead==2){
+		*addr = 140724404281416;
+	}
+	else if(testFileRead==3){
+		*addr = 140724404281464;
+	}
+	else if(testFileRead==4){
+		*addr = 140606421075635;
+	}
+	else if(testFileRead==5){
+		*addr = 140724404281456;
+	}
+	else if(testFileRead==6){
+		*addr = 140606421090321;
+	}
+	else if(testFileRead==7){
+		*addr = 140724404281448;
+	}
+	else if(testFileRead==8){
+		*addr = 140606421090324;
+	}
+	else if(testFileRead==9){
+		*addr = 140606421090326;
+	}
+	else if(testFileRead==10){
+		*addr = 140724404281440;
+	}
+	else if(testFileRead==11){
+		*addr =140737336764280;
+	}
+	else if (testFileRead<100){
+		*addr = 140724404281440;
+	}
+	else
+		return false;
+        
+        *size = 4;
+        *timestamp = 1;
+        testFileRead++;
+	//*addr = addressEntries[currentEntry];// REMOVED THIS LINE //TODO: UN-REMOVE THE LINE
+	//*size = sizeEntries[currentEntry];
+	//cout<<*timestamp<<"  "<<*addr<<"   "<<*size<<endl;
 	currentEntry++;
 	return true;
 }
 
 
 CompressedTraceReader::CompressedTraceReader(const string& prefix, CompressionType compressionArg) : TraceReaderBase(), instrMerger(prefix+"-instr", compressionArg), readMerger(prefix+"-read", compressionArg), writeMerger(prefix+"-write", compressionArg){
-	instrValid = instrMerger.readEntry(&instrTimestamp, &instrAddress, &instrSize);
-	readValid = readMerger.readEntry(&readTimestamp, &readAddress, &readSize);
-	writeValid = writeMerger.readEntry(&writeTimestamp, &writeAddress, &writeSize);
+	instrValid = instrMerger.readEntry(&instrTimestamp, &instrAddress, &instrSize, true);
+	readValid = readMerger.readEntry(&readTimestamp, &readAddress, &readSize, false);
+	writeValid = writeMerger.readEntry(&writeTimestamp, &writeAddress, &writeSize, false);
 }
 
 bool CompressedTraceReader::readEntry(TraceEntry *entry){
@@ -306,7 +313,7 @@ bool CompressedTraceReader::readEntry(TraceEntry *entry){
 		entry->size = instrSize;
 		entry->read = true;
 		entry->instr = true;
-		instrValid = instrMerger.readEntry(&ts, &instrAddress, &instrSize);
+		instrValid = instrMerger.readEntry(&ts, &instrAddress, &instrSize, true);
 		instrTimestamp += ts;
 		numInstr++;
 		return true;
@@ -316,7 +323,7 @@ bool CompressedTraceReader::readEntry(TraceEntry *entry){
 		entry->size = readSize;
 		entry->read = true;
 		entry->instr = false;
-		readValid = readMerger.readEntry(&ts, &readAddress, &readSize);
+		readValid = readMerger.readEntry(&ts, &readAddress, &readSize, false);
 		readTimestamp += ts;
 		numReads++;
 		return true;
@@ -326,7 +333,7 @@ bool CompressedTraceReader::readEntry(TraceEntry *entry){
 		entry->size = writeSize;
 		entry->read = false;
 		entry->instr = false;
-		writeValid = writeMerger.readEntry(&ts, &writeAddress, &writeSize);
+		writeValid = writeMerger.readEntry(&ts, &writeAddress, &writeSize, false);
 		writeTimestamp += ts;
 		numWrites++;
 		return true;
