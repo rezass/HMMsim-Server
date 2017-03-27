@@ -1,4 +1,4 @@
--memory_organization old_hybrid
+-memory_organization hybrid
 #-debug 0 
 #-debug_cpu 0
 #-debug_caches 0
@@ -13,10 +13,11 @@
 #-debug_hybrid_memory 0 
 #-instr_limit 100000
 -dram_fractions 0.000009
--migration_policy two_lru
+#-migration_policy two_lru
+-migration_policy new_two_lru
 -burst_migration false
--fixed_dram_migration_cost true
--fixed_pcm_migration_cost true
+-fixed_dram_migration_cost false
+-fixed_pcm_migration_cost false
 #-migration_policy multi_queue
 -L2_size 8
 #-instr_L1_size 2
@@ -24,3 +25,8 @@
 #-debug_hybrid_memory 1
 #-fixed_dram_migration_cost true
 #-fixed_pcm_migration_cost true
+-migration_mechanism pause
+-monitoring_location before_caches
+-base_migration_rate 0.5
+#-fixed_pcm_migration_cost 0
+#-fixed_dram_migration_cost 0

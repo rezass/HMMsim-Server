@@ -269,6 +269,7 @@ bool HybridMemoryManager::access(int pid, addrint virtualAddr, bool read, bool i
 }
 
 bool HybridMemoryManager::migrateOnDemand(addrint physicalPage, addrint *destPhysicalPage){
+    updateMonitors();
 	uint64 timestamp = engine->getTimestamp();
 	debug("(%lu)", physicalPage);
 //	cout << dramFreePageList.size();
@@ -1274,6 +1275,7 @@ OldHybridMemoryManager::OldHybridMemoryManager(
  */
 bool OldHybridMemoryManager::access(int pid, addrint virtualAddr, bool read, bool instr, addrint *physicalAddr, CPU *cpu){
 
+    cout << "access: " << engine->getTimestamp() << ", " << virtualAddr<<endl;
 	uint64 timestamp = engine->getTimestamp();
 	//debug("(%d, %lu, %s, %s)", pid, virtualAddr, read ? "read" : "write", instr ? "instr" : "data");
 	addrint virtualPage = getIndex(virtualAddr);
@@ -1318,10 +1320,14 @@ bool OldHybridMemoryManager::access(int pid, addrint virtualAddr, bool read, boo
 			myassert(false);
 		}
 	}
-
+           
 	if (state == NOT_MIGRATING || state == WAITING){
+            cout << "BBBB" << endl;
 		selectPolicyAndMigrate();
 	}
+        else {
+            cout << "CCCC: " << virtualAddr << ", " << state << endl;
+        }
 /*	if(state == COPY){
 		cout<<"COPY\n";
 	}*/
@@ -1533,11 +1539,11 @@ void OldHybridMemoryManager::monitorPhysicalAccess(addrint addr, bool read, bool
 	if (monitoringLocation == AFTER_CACHES){
 		string r = read?"R":"W";
 		string ins = instr?"I":"D";
-		cout << addr << "\t";
-		cout << 64 << "\t";
-		cout << r << "\t";
-		cout << ins << "\t";
-		cout << endl;
+//		cout << addr << "\t";
+//		cout << 64 << "\t";
+//		cout << r << "\t";
+//		cout << ins << "\t";
+//		cout << endl;
 		if ((state == FLUSH_BEFORE || state == COPY || state == FLUSH_AFTER) && page == currentMigration.destPhysicalPage){
 			static int q=0;
 			cout<<"FLUSH__MEMANAGER "<<q;
@@ -1562,6 +1568,7 @@ void OldHybridMemoryManager::monitorPhysicalAccess(addrint addr, bool read, bool
 }
 
 bool OldHybridMemoryManager::startMigration(int pid){
+    
 	myassert(state == NOT_MIGRATING || state == WAITING);
 	myassert(flushQueue.empty());
 	uint64 timestamp = engine->getTimestamp();
@@ -1710,9 +1717,11 @@ bool OldHybridMemoryManager::startMigration(int pid){
 }
 
 void OldHybridMemoryManager::selectPolicyAndMigrate(){
+    cout << engine->getTimestamp() << endl;
 	uint64 timestamp = engine->getTimestamp();
 	//debug("(): state: %d", state);
 	if (state == NOT_MIGRATING){
+            
 		int previousPolicy = currentPolicy;
 		bool found = false;
 		do {
@@ -1750,6 +1759,7 @@ void OldHybridMemoryManager::selectPolicyAndMigrate(){
 			if (minValue != numeric_limits<uint64>::max()){
 				state = WAITING;
 				wakeupTime = minValue + timestamp;
+                                cout << "WWWW: " << minValue << endl;
 				addEvent(minValue, START_MIGRATION);
 				lastStartWaitingTime = timestamp;
 			}
@@ -1775,6 +1785,7 @@ void OldHybridMemoryManager::selectPolicyAndMigrate(){
 			}
 		}
 	} else {
+            
 		//another event already scheduled a migration, so don't do anything
 	}
 }
@@ -1782,6 +1793,7 @@ void OldHybridMemoryManager::selectPolicyAndMigrate(){
 void OldHybridMemoryManager::process(const Event * event){
 	uint64 timestamp = engine->getTimestamp();
 	EventType type = static_cast<EventType>(event->getData());
+        cout << "process: " << type << endl;
 	if (type == START_MIGRATION){
 		selectPolicyAndMigrate();
 	} else if (type == COPY_PAGE){

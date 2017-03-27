@@ -274,7 +274,8 @@ CacheModel::Result CacheModel::access(addrint addr, bool read, bool instr, addri
 	Result ret;
 	timestamp++;
 	int block = sets[index].access(tag, timestamp, read);
-	if (block == -1){
+	block = -1;
+        if (block == -1){
 		if (read){
 			if (instr){
 				instrLoadMisses++;
@@ -289,6 +290,7 @@ CacheModel::Result CacheModel::access(addrint addr, bool read, bool instr, addri
 		if (it != remapTable.end()){
 			it->second.count++;
 		}
+                res = Set::NO_EVICTION;
 		if (res == Set::NO_EVICTION){
 			misses_without_eviction++;
 			ret = MISS_WITHOUT_EVICTION;
