@@ -205,13 +205,13 @@ class NewTwoLRUPolicy : public BaseMigrationPolicy {
 	bool enableRollback;
 	bool promotionFilter;
 	unsigned demotionAttempts;
-
+	unsigned migrationThreshold;
         
         private:
 	struct AccessEntry {
 		int pid;
 		addrint addr;
-		int hitCount;
+		unsigned hitCount;
                 bool migrating;
 		AccessEntry(int pidArg, addrint addrArg, int hitCountArg = 0, bool mig = false) : pid(pidArg), addr(addrArg),hitCount(hitCountArg), migrating(mig) {}
 	};
@@ -264,7 +264,8 @@ public:
 		bool usePendingListArg,
 		bool enableRollbackArg,
 		bool promotionFilterArg,
-		unsigned demotionAttemptsArg);
+		unsigned demotionAttemptsArg,
+		unsigned migrationThresholdArg);
 	PageType allocate(int pid, addrint addr, bool read, bool instr);
 	bool migrate(int pid, addrint addr);
 //	bool complete(int *pid, addrint *addr);

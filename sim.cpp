@@ -165,6 +165,8 @@ int main(int argc, char * argv[]) {
     OptionalArgument<bool> promotionFilter(&args, "promotion_filter", "whether to filter promotions based on position in the multi queue", false);
     OptionalArgument<unsigned> demotionAttempts(&args, "demotion_attempts", "number of times the policy is consulted before it allows for a demotion", 0);
 
+    OptionalArgument<unsigned> migrationThreshold(&args, "migration_threshold", "number of numbers. mother of numbers", 10);
+
 
     //Arguments for static partition policy
     OptionalArgument<string> dramFractions(&args, "dram_fractions", "string representing the fraction of dram space allocated to each process", "0.0078125"); //32MB for a 4GB system
@@ -346,7 +348,7 @@ int main(int argc, char * argv[]) {
     if (useCaches.getValue()) {
         sharedL2 = new Cache("L2", "Shared L2 Cache", &engine, &stats, debugCachesStart.getValue(), L2_WAIT, L2_TAG, L2_STALL, memory, 1024 * sharedL2CacheSize.getValue(), blockSize.getValue(), sharedL2Assoc.getValue(), CACHE_LRU, pageSize.getValue(), sharedL2Penalty.getValue(), sharedL2QueueSize.getValue(), realCacheRemap.getValue());
     }
-cout << "dddd" << endl;
+//cout << "dddd" << endl;
     if (memoryOrganization.getValue() == "hybrid") {
         assert(useCaches.getValue());
         unsigned pidsPerPolicy = 0;
@@ -379,8 +381,8 @@ cout << "dddd" << endl;
             } else if (migrationPolicy.getValue() == "multi_queue") {
                 policies.emplace_back(new MultiQueueMigrationPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue()));
             } else if (migrationPolicy.getValue() == "new_two_lru") {
-                cout << "BBBB"<<endl;
-                policies.emplace_back(new NewTwoLRUPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue()));
+                //cout << "BBBB"<<endl;
+                policies.emplace_back(new NewTwoLRUPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue(),migrationThreshold.getValue()));
             } else if (migrationPolicy.getValue() == "first_touch") {
                 //				policies.emplace_back(new FirstTouchMigrationPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), allocator, pidsPerPolicy));
             } else if (migrationPolicy.getValue() == "double_clock") {

@@ -200,6 +200,13 @@ bool HybridMemory::access(MemoryRequest *request, IMemoryCallback *caller){
 	}
 	bool read = request->read;
 	int pid = manager->getPidOfAddress(request->addr);
+/*	string r = request->read?"R":"W";
+                string ins = request->instr?"I":"D";
+                cout << request->addr << "\t";
+                cout << 64 << "\t";
+                cout << r << "\t";
+                cout << ins << "\t";
+                cout << endl;*/
 
 	auto mit = migrations.find(page);
 	if (mit != migrations.end()){
@@ -382,6 +389,13 @@ bool HybridMemory::access(MemoryRequest *request, IMemoryCallback *caller){
 		}
 	}
 	if (caller != manager){
+		string r = request->read?"R":"W";
+		string ins = request->instr?"I":"D";
+		cout << request->addr << "\t";
+		cout << 64 << "\t";
+		cout << r << "\t";
+		cout << ins << "\t";
+		cout << endl;
 		//ignore accesses that come from hybrid memory manager (these are due to flushes, which are not monitored)
 		auto monit = monitors.find(page);
 		if (monit == monitors.end()){

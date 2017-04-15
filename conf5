@@ -28,5 +28,6 @@
 -migration_mechanism pause
 -monitoring_location before_caches
 -base_migration_rate 0.5
+-migration_threshold 100
 #-fixed_pcm_migration_cost 0
 #-fixed_dram_migration_cost 0

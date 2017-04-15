@@ -235,8 +235,8 @@ PageType MultiQueueMigrationPolicy::allocate(int pid, addrint addr, bool read, b
 bool MultiQueueMigrationPolicy::migrate(int pid, addrint addr) {
     static long selectPageCount2;
     selectPageCount2++;
-    if (selectPageCount2 % 10000 == 0)
-        cout << "new multi queue_selectpge" << selectPageCount2 << endl;
+    //if (selectPageCount2 % 10000 == 0)
+    //    cout << "new multi queue_selectpge" << selectPageCount2 << endl;
     if (dramPagesLeft > 0) {
         int index = numPids == 1 ? 0 : pid;
         auto it = pages[index].find(addr);
@@ -1479,7 +1479,7 @@ PageType OldTwoLRUMigrationPolicy::allocate(int pid, addrint addr, bool read, bo
     //        cout << "insert" << endl;
     bool ins = pages[index].emplace(addr, PageEntry(list, accessIt)).second;
     myassert(ins);
-    cout << "Allocate:" << addr << ", " << ret << endl;
+    //cout << "Allocate:" << addr << ", " << ret << endl;
     return ret;
 }
 
@@ -1570,7 +1570,7 @@ bool OldTwoLRUMigrationPolicy::selectPage(int *pid, addrint *addr) {
         AccessQueue::iterator pcmIt = pcmQueue.begin();
         while (!found && pcmIt != pcmQueue.end()) {
             myassert(pcmIt != pcmQueue.end());
-            if (pcmIt->hitCount > 100) {
+            if (pcmIt->hitCount >= 10) {
                 found = true;
                 *pid = pcmIt->pid;
                 *addr = pcmIt->addr;
@@ -1655,7 +1655,8 @@ NewTwoLRUPolicy::NewTwoLRUPolicy(
         bool usePendingListArg,
         bool enableRollbackArg,
         bool promotionFilterArg,
-        unsigned demotionAttemptsArg) :
+        unsigned demotionAttemptsArg,
+		unsigned migrationThresholdArg) :
 BaseMigrationPolicy(nameArg, engineArg, debugStartArg, dramPagesArg, allocPolicyArg, numPidsArg, maxFreeDramArg, completeThresholdArg, rollbackTimeoutArg),
 numQueues(numQueuesArg),
 thresholdQueue(thresholdQueueArg),
@@ -1668,7 +1669,8 @@ useHistory(useHistoryArg),
 usePendingList(usePendingListArg),
 enableRollback(enableRollbackArg),
 promotionFilter(promotionFilterArg),
-demotionAttempts(demotionAttemptsArg) {
+demotionAttempts(demotionAttemptsArg),
+migrationThreshold(migrationThresholdArg){
 
     pages = new PageMap[numPids];
 
@@ -1690,7 +1692,7 @@ PageType NewTwoLRUPolicy::allocate(int pid, addrint addr, bool read, bool instr)
     //        cout << "insert" << endl;
     bool ins = pages[index].emplace(addr, PageEntry(list, accessIt)).second;
     myassert(ins);
-    cout << "Allocate:" << addr << ", " << ret << endl;
+    //cout << "Allocate:" << addr << ", " << ret << endl;
     return ret;
 
 }
@@ -1700,7 +1702,8 @@ bool NewTwoLRUPolicy::migrate(int pid, addrint addr) {
         AccessQueue::iterator pcmIt = pcmQueue.begin();
         while (!found && pcmIt != pcmQueue.end()) {
             myassert(pcmIt != pcmQueue.end());
-            if (pcmIt->addr == addr && pcmIt->hitCount > 100) {
+         //   cout<<"MIGG: "<<addr<<"   "<<pcmIt->hitCount<<endl;
+            if (pcmIt->addr == addr && pcmIt->hitCount >= migrationThreshold) {
                 found = true;       
                 pcmIt = pcmQueue.erase(pcmIt);
             }
@@ -1712,7 +1715,7 @@ bool NewTwoLRUPolicy::migrate(int pid, addrint addr) {
             it->second.type = DRAM_LIST;
             it->second.accessIt = dramQueue.emplace(dramQueue.begin(), AccessEntry(pid, addr, 0));
             dramPagesLeft--;
-            cout << "Promotion: " << addr << endl;
+      //      cout << "Promotion: " << addr << endl;
             return true;
         } else {
             return false;
@@ -1725,28 +1728,29 @@ void NewTwoLRUPolicy::done(int pid, addrint addr) {
 
 void NewTwoLRUPolicy::monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress) {
     for (auto cit = counts.begin(); cit != counts.end(); ++cit) {
-        cout << "Monitor: " << cit->page << " ";
         int index = numPids == 1 ? 0 : cit->pid;
-        //    if (addr == 34128307266)
         //      cout << "addr?!" << endl;
+   //     cout << "PAGE123 "<<cit->page<<endl;
         PageMap::iterator it = pages[index].find(cit->page);
         //	cout<<addr<<"MONITOR CALL IN TWOLRU"<<endl;
         myassert(it != pages[index].end());
         if (it->second.type == DRAM_LIST) {
             //	cout<<addr<<" WAS THE MONITOR ADDR IN DRAM "<<endl;
             it->second.accessIt->hitCount += cit->reads + cit->writes;
+        //    cout<<"Address "<<cit->page<<" has now the hitcount "<<it->second.accessIt->hitCount<<endl;
             AccessEntry temp = *it->second.accessIt;
             dramQueue.erase(it->second.accessIt);
             it->second.accessIt = dramQueue.emplace(dramQueue.begin(), temp);
-            cout << "DRAM, " << it->second.accessIt->hitCount << endl;
+            //cout << "DRAM, " << it->second.accessIt->hitCount << endl;
             //        cout << "dummy" <<endl;
             //currentDramIt=dramQueue.begin();
         } else if (it->second.type == PCM_LIST) {
             it->second.accessIt->hitCount += cit->reads + cit->writes;
+       //     cout<<"Address "<<cit->page<<" has now the hitcount "<<it->second.accessIt->hitCount<<" PCMMM"<<endl;
             AccessEntry temp = *it->second.accessIt;
             pcmQueue.erase(it->second.accessIt);
             it->second.accessIt = pcmQueue.emplace(pcmQueue.begin(), temp);
-            cout << "PCM, " << it->second.accessIt->hitCount << endl;
+            //cout << "PCM, " << it->second.accessIt->hitCount << endl;
         } else {
             myassert(false);
         }
@@ -1758,12 +1762,12 @@ void NewTwoLRUPolicy::monitor(const vector<CountEntry>& counts, const vector<Pro
 bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
 
     if (dramPagesLeft <= 0) {
-        AccessQueue::iterator dramIt = dramQueue.end();
+        AccessQueue::iterator dramIt = dramQueue.begin();
         if (dramQueue.size() < 1) {
             cout << "WHAT?!" << endl;
             myassert(false);
         }
-        dramIt--;
+    //    dramIt--;
         *pid = dramIt->pid;
         *addr = dramIt->addr;
         PageMap::iterator it = pages[dramIt->pid].find(dramIt->addr);
@@ -1773,7 +1777,7 @@ bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
         it->second.accessIt = pcmQueue.emplace(pcmQueue.begin(), AccessEntry(0, it->first, 0));
         dramQueue.erase(dramIt);
         dramPagesLeft++;
-        cout << "Demotion: " << *addr << endl;
+        //cout << "Demotion: " << *addr << endl;
         return true;
     }
     return false;

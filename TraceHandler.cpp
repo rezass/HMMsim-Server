@@ -132,10 +132,10 @@ CompressedTraceReader::TraceMerger::~TraceMerger() {
 }
 
 bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *addr, uint8 *size, bool mocked) {
-    if (!mocked)
-        return false;
-    static unsigned long testFileRead = 0;
-    /*if (currentEntry == BUFFER_SIZE){
+    //if (!mocked)
+    //    return false;
+    //static unsigned long testFileRead = 0;
+    if (currentEntry == BUFFER_SIZE){
             if (compression == GZIP){
                     //testFileRead++;
                     //cout<<"RD: "<<testFileRead<<endl;
@@ -185,8 +185,8 @@ bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *a
             return false;
     }
          
-     *timestamp = timestampEntries[currentEntry];*/
-    if (testFileRead / 4 == 0) {
+     *timestamp = timestampEntries[currentEntry];
+   /* if (testFileRead / 4 == 0) {
         *addr = 4096;
     } else if (testFileRead / 4 == 1) {
         *addr = 8192;
@@ -216,16 +216,16 @@ bool CompressedTraceReader::TraceMerger::readEntry(uint64 *timestamp, addrint *a
         *addr = 4194304;
     } else if (testFileRead / 4 < 300) {
         *addr = 8388608;
-    /*} else if (testFileRead / 4 < 450) {
-        *addr = 8392704;*/
+   //} else if (testFileRead / 4 < 450) {
+   //     *addr = 8392704;
     } else
         return false;
 
     *size = 4;
     *timestamp = 1;
-    testFileRead += 1;
-    //*addr = addressEntries[currentEntry];// REMOVED THIS LINE //TODO: UN-REMOVE THE LINE
-    //*size = sizeEntries[currentEntry];
+    testFileRead += 1; */
+    *addr = addressEntries[currentEntry];// REMOVED THIS LINE //TODO: UN-REMOVE THE LINE
+    *size = sizeEntries[currentEntry];
     //cout<<*timestamp<<"  "<<*addr<<"   "<<*size<<endl;
     currentEntry++;
     return true;

@@ -838,6 +838,8 @@ bool CPU::readNextEntry(){
 	} else {
 		if (reader->readEntry(&firstEntry)){
 			addrint firstByteBlockAddress = firstEntry.address & ~offsetMask;
+			//cout << firstEntry.address << "\t" << firstByteBlockAddress;
+			//cout <<endl;
 			addrint lastByteBlockAddress = (firstEntry.address + firstEntry.size - 1) & ~offsetMask;
 			if (firstByteBlockAddress == lastByteBlockAddress){
 				firstEntry.address = firstByteBlockAddress;

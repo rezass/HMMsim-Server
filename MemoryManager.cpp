@@ -428,6 +428,7 @@ void HybridMemoryManager::process(const Event * event){
 	uint64 timestamp = engine->getTimestamp();
 	EventType type = static_cast<EventType>(event->getData());
 	debug("(%d)", type);
+
 	if (type == DEMOTE){
 		updateMonitors();
 		selectPolicyAndDemote();
@@ -591,10 +592,10 @@ void HybridMemoryManager::updateMonitors(){
 				warn("%lu: Why is this page (%lu) not in the physical map?", engine->getTimestamp(), mit->page);
 				for (unsigned i = 0; i < pageSize/blockSize; i++){
 					if (mit->readBlocks[i] != 0){
-						cout << "read: " << getAddressFromBlock(mit->page, i) << endl;
+						//cout << "read: " << getAddressFromBlock(mit->page, i) << endl;
 					}
 					if (mit->writtenBlocks[i] != 0){
-						cout << "written: " << getAddressFromBlock(mit->page, i) << endl;
+						//cout << "written: " << getAddressFromBlock(mit->page, i) << endl;
 					}
 				}
 				myassert(false);
@@ -1322,11 +1323,11 @@ bool OldHybridMemoryManager::access(int pid, addrint virtualAddr, bool read, boo
 	}
            
 	if (state == NOT_MIGRATING || state == WAITING){
-            cout << "BBBB" << endl;
+            //cout << "BBBB" << endl;
 		selectPolicyAndMigrate();
 	}
         else {
-            cout << "CCCC: " << virtualAddr << ", " << state << endl;
+            //cout << "CCCC: " << virtualAddr << ", " << state << endl;
         }
 /*	if(state == COPY){
 		cout<<"COPY\n";
