@@ -29,7 +29,9 @@ MemoryMapping::MemoryMapping(MappingType mappingTypeArg, unsigned numRanksArg, u
 	numBanks = numRanks * banksPerRank;
 	totalSize = static_cast<uint64>(numBanks) * static_cast<uint64>(rowsPerBank) * static_cast<uint64>(blocksPerRow) * static_cast<uint64>(blockSize);
 
-
+//	cout << totalSize;
+//	cout << flush;
+//	getchar();
 	//these 5 assignments depend on the address mapping used
 	if (mappingType == ROW_RANK_BANK_COL){
 		blockOffset = 0;

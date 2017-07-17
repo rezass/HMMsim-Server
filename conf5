@@ -5,14 +5,16 @@
 #-debug_hybrid_memory_manager 0
 #-debug_hybrid_memory 0
 #-debug hybrid_caches 0
-#-dram_ranks 8
+-pcm_ranks 4
 #-dram_queue_size 8
-#-dram_banks_per_rank 1
+-pcm_banks_per_rank 1
 #-dram_rows_per_bank 1024
 #-dram_blocks_per_row  64
 #-debug_hybrid_memory 0 
 #-instr_limit 100000
 -dram_fractions 0.000009
+-pcm_fractions 1
+#-dram_fractions 1
 #-migration_policy two_lru
 -migration_policy new_two_lru
 -burst_migration false

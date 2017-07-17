@@ -259,6 +259,7 @@ class HybridMemory : public IEventHandler, public IMemory, public IMemoryCallbac
 	BinaryListStat<double, divides<double>, uint64> avgPcmWriteTimePerPid;
 	BinaryListStat<double, divides<double>, uint64> avgPcmAccessTimePerPid;
 	BinaryListStat<double, divides<double>, uint64> avgAccessTimePerPid;
+	Stat<uint64> uniquepages;
 
 public:
 	HybridMemory(

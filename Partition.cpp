@@ -18,6 +18,7 @@ StaticPartition::StaticPartition(unsigned numPoliciesArg, unsigned pageSizeArg, 
 	size_t next = -1;
 	do {
 		current = next + 1;
+		cout<<dramFractionsArg<<endl;
 		next = dramFractionsArg.find_first_of("_", current);
 		double f = atof(dramFractionsArg.substr(current, next - current).c_str());
 		dramPagesPerPid.emplace_back(static_cast<uint64>(floor(f*dramPages + 0.5)));

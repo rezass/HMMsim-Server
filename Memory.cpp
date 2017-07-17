@@ -49,8 +49,10 @@ Memory::Memory(
 	uint64 accessLatencyArg,
 	bool longCloseLatencyArg,
 	uint64 busLatencyArg,
-	addrint offsetArg) :
+	addrint offsetArg,
+	string pcmFractionArg) :
 		name(nameArg),
+		pcmFraction(pcmFractionArg),
 		desc(descArg),
 		engine(engineArg),
 		debugStart(debugStartArg),

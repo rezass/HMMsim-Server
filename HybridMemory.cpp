@@ -4,11 +4,16 @@
  * See the file LICENSE.txt for copying permission.
  */
 
-#include "HybridMemory.H"
+#include "include/HybridMemory.H"
 
-#include <iomanip>
-#include <iostream>
+#include <unistd.h>
 #include <cmath>
+#include <list>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 HybridMemory::HybridMemory(
 	const string& nameArg,
@@ -178,7 +183,10 @@ HybridMemory::HybridMemory(
 		avgPcmWriteTimePerPid(statCont, nameArg + "_avg_pcm_write_time_per_pid", "Average number of cycles servicing PCM writes as seen by the " + descArg + " from process", &pcmWriteTimePerPid, &pcmWritesPerPid),
 		avgPcmAccessTimePerPid(statCont, nameArg + "_avg_pcm_access_time_per_pid", "Average number of cycles servicing PCM accesses as seen by the " + descArg + " from process", &pcmAccessTimePerPid, &pcmAccessesPerPid),
 
-		avgAccessTimePerPid(statCont, nameArg + "_avg_access_time_per_pid", "Average number of cycles servicing all accesses as seen by the " + descArg + " from process", &totalAccessTimePerPid, &totalAccessesPerPid)
+		avgAccessTimePerPid(statCont, nameArg + "_avg_access_time_per_pid", "Average number of cycles servicing all accesses as seen by the " + descArg + " from process", &totalAccessTimePerPid, &totalAccessesPerPid),
+
+		uniquepages(statCont, nameArg + "_unique_pages", "Number of unique pages found", 0)
+
 {
 
 }
@@ -388,14 +396,25 @@ bool HybridMemory::access(MemoryRequest *request, IMemoryCallback *caller){
 			}
 		}
 	}
+	static std::map<addrint, int> pages_map;
 	if (caller != manager){
-		string r = request->read?"R":"W";
+	std::map<addrint, int>::iterator i = pages_map.find(request->addr);
+		if(i == pages_map.end()){
+			pages_map[request->addr] = 1;
+		}
+		else
+		{
+			pages_map[request->addr] = i->second + 1;
+		}
+		uniquepages=pages_map.size();
+
+		/*string r = request->read?"R":"W";
 		string ins = request->instr?"I":"D";
 		cout << request->addr << "\t";
 		cout << 64 << "\t";
 		cout << r << "\t";
 		cout << ins << "\t";
-		cout << endl;
+		cout << endl;*/
 		//ignore accesses that come from hybrid memory manager (these are due to flushes, which are not monitored)
 		auto monit = monitors.find(page);
 		if (monit == monitors.end()){

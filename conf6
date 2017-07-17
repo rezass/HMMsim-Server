@@ -1,0 +1,27 @@
+-memory_organization hybrid
+#-debug 0 
+#-debug_cpu 0
+#-debug_caches 0
+#-debug_hybrid_memory_manager 0
+#-debug_hybrid_memory 0
+#-debug hybrid_caches 0
+-pcm_ranks 8
+-dram_ranks 8
+-dram_rows_per_bank 16384
+-pcm_rows_per_bank 16384
+#-dram_queue_size 8
+-pcm_banks_per_rank 16
+-dram_banks_per_rank 16
+#-dram_rows_per_bank 1024
+#-dram_blocks_per_row  64
+#-debug_hybrid_memory 0 
+#-instr_limit 100000
+-dram_fractions 1
+-pcm_fractions 1
+#-pcm_fractions 0.220787048
+#-dram_fractions 0.002204895
+-migration_policy new_two_lru
+-migration_mechanism pin
+-monitoring_location before_caches
+-base_migration_rate 0.5
+-migration_threshold 0

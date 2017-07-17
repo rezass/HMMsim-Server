@@ -36,7 +36,8 @@ public:
 	StaticPartition(unsigned numPoliciesArg, unsigned pageSizeArg, uint64 dramSizeArg, string dramFractionsArg, string rateFractionsArg);
 	void calculate(uint64 cycles, vector<Counter *>& instrCounters);
 	unsigned getNumPolicies() { return numPolicies; }
-	uint64 getDramPages(int pid) { return dramPagesPerPid[pid]; }
+	uint64 getDramPages(int pid) {
+		return dramPagesPerPid[pid]; }
 	double getRate(int pid) { return ratePerPid[pid]; }
 };
 

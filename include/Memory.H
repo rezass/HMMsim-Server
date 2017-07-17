@@ -15,6 +15,7 @@
 #include "MemoryManager.H"
 #include "Statistics.H"
 #include "Types.H"
+#include <string.h>
 
 
 class Staller : public IEventHandler, public IMemory {
@@ -31,6 +32,7 @@ public:
 
 class Memory : public IMemory, public IMemoryCallback {
 	string name;
+	string pcmFraction;
 	string desc;
 	Engine *engine;
 
@@ -133,7 +135,8 @@ public:
 		uint64 accessLatencyArg,
 		bool longCloseLatencyArg,
 		uint64 busLatencyArg,
-		addrint offsetArg);
+		addrint offsetArg,
+		string pcmFractionArg);
 	virtual ~Memory();
 
 	void process(const Event *event);
@@ -142,7 +145,21 @@ public:
 	void unstall(IMemory *caller) {}
 	MemoryMapping* getMapping() {return &mapping;}
 
-	uint64 getSize() {return mapping.getTotalSize();}
+	uint64 getSize() {
+		if(strcmp(getName(), "pcm") == 0)
+		{
+//		cout << getName() << " : " << mapping.getTotalSize() << endl;
+		double f = stod(pcmFraction);
+//		floor(f*m + 0.5))
+		double tmp = f*mapping.getTotalSize();
+//		cout << getName() <<" : " << (uint64)tmp << endl;
+//		getchar();
+		return (uint64)tmp;
+		}
+
+		return mapping.getTotalSize();
+		}
+
 	uint64 getBlockSize() {return mapping.getBlockSize();}
 	addrint getBlockAddress(addrint addr) {return mapping.getBlockAddress(addr);}
 

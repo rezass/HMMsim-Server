@@ -33,6 +33,7 @@ rollbackTimeout(rollbackTimeoutArg) {
 
     myassert(numPids > 0);
     dramPagesLeft = dramPages;
+  //  cout <<dramPagesLeft<<flush;
     maxFreeDramPages = dramPages * maxFreeDram;
 
     dramFull = false;
@@ -1671,7 +1672,6 @@ enableRollback(enableRollbackArg),
 promotionFilter(promotionFilterArg),
 demotionAttempts(demotionAttemptsArg),
 migrationThreshold(migrationThresholdArg){
-
     pages = new PageMap[numPids];
 
 }
@@ -1682,6 +1682,7 @@ PageType NewTwoLRUPolicy::allocate(int pid, addrint addr, bool read, bool instr)
     AccessQueue::iterator accessIt;
     ListType list;
     if (ret == DRAM) {
+//    	cout<<"DRAM"<<endl;
         accessIt = dramQueue.emplace(dramQueue.begin(), AccessEntry(pid, addr, 0));
         list = DRAM_LIST;
     } else {
@@ -1698,6 +1699,12 @@ PageType NewTwoLRUPolicy::allocate(int pid, addrint addr, bool read, bool instr)
 }
 
 bool NewTwoLRUPolicy::migrate(int pid, addrint addr) {
+	if(dramPagesLeft==0)
+		return false;
+	if(dramPagesLeft<0){
+		cout<<"BUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG";
+		myassert(false);
+	}
         bool found = false;
         AccessQueue::iterator pcmIt = pcmQueue.begin();
         while (!found && pcmIt != pcmQueue.end()) {

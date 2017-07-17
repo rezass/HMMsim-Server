@@ -155,6 +155,9 @@ HybridMemoryManager::HybridMemoryManager(
 	numDramPages = memory->getDramSize() / pageSize;
 	dramSize = numDramPages * pageSize;
 	numPcmPages = memory->getPcmSize() / pageSize;
+//	cout << "pcm pages: "<< numPcmPages << flush<< endl;
+//	cout << "dram pages: "<<numDramPages << flush;
+
 	pcmSize = numPcmPages * pageSize;
 
 	offsetWidth = logPageSize;
@@ -180,14 +183,16 @@ HybridMemoryManager::HybridMemoryManager(
 	onePastLastDramPage = getIndex(onePastLastDramAddress);
 	firstPcmPage = getIndex(firstPcmAddress);
 	onePastLastPcmPage = getIndex(onePastLastPcmAddress);
-
-	for(addrint page = firstDramPage; page < onePastLastDramPage; page++){
+	for(addrint page=firstDramPage; page < onePastLastDramPage; page++){
 		dramFreePageList.emplace_back(page);
 	}
 
 	for(addrint page = firstPcmPage; page < onePastLastPcmPage; page++){
 		pcmFreePageList.emplace_back(page);
 	}
+	cout <<endl<< "pcm pages num: "<< pcmFreePageList.size() << flush<< endl;
+		cout << "dram pages num: "<<dramFreePageList.size() << flush<<endl;
+//		getchar();
 
 	pages = new PageMap[numProcesses];
 
