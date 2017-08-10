@@ -1,8 +1,9 @@
--memory_organization hybrid
--pcm_fractions 1
+#16GB EACH MEMORY
+-memory_organization dram
 -dram_fractions 1
+-pcm_fractions 1
 -pcm_ranks 16
--dram_ranks 4
+-dram_ranks 16
 -dram_rows_per_bank 16384
 -pcm_rows_per_bank 16384
 -pcm_banks_per_rank 16

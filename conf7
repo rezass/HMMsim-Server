@@ -1,11 +1,9 @@
--memory_organization hybrid
--dram_fractions 0.002
-#-dram_my_fractions 1
+-memory_organization dram
+-dram_fractions 1
 -pcm_fractions 1
 -migration_policy new_two_lru
 -L2_size 8
--dram_ranks 1
--dram_banks_per_rank 2
-#-instr_L1_size 2
+-dram_ranks 16
+-dram_banks_per_rank 16
 -base_migration_rate 0.5
--migration_threshold 100
+-migration_threshold 1

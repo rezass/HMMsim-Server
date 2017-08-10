@@ -1,10 +1,12 @@
 -memory_organization hybrid
+-pcm_ranks 2
 -pcm_fractions 1
--dram_fractions 1
--pcm_ranks 16
--dram_ranks 4
+-dram_ranks 2
 -dram_rows_per_bank 16384
 -pcm_rows_per_bank 16384
 -pcm_banks_per_rank 16
 -dram_banks_per_rank 16
 -migration_policy new_two_lru
+-dram_fractions 0.003074646
+-migration_threshold 0
+-instr_limit 50000000

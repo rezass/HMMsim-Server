@@ -105,6 +105,85 @@ public:
 	bool selectDemotionPage(int *pid, addrint *addr) {return false;}
 };
 
+class NewTwoLRUPolicy : public BaseMigrationPolicy {
+	unsigned numQueues;
+	int thresholdQueue;
+	uint64 lifetime;
+	bool logicalTime;
+	uint64 filterThreshold;
+	bool secondDemotionEviction;
+	bool aging;
+	bool useHistory;
+	bool usePendingList;
+	bool enableRollback;
+	bool promotionFilter;
+	unsigned demotionAttempts;
+
+	int migrationThreshold;
+
+	struct AccessEntry {
+		int pid;
+		addrint addr;
+		int hitCount;
+		AccessEntry(int pidArg, addrint addrArg, int hitCountArg = 0) : pid(pidArg), addr(addrArg),hitCount(hitCountArg) {}
+	};
+
+	typedef list<AccessEntry> AccessQueue;
+
+	enum ListType {
+		DRAM_LIST,
+		PCM_LIST,
+	};
+	struct PageEntry {
+		ListType type;
+		AccessQueue::iterator accessIt;
+		PageEntry(ListType typeArg, AccessQueue::iterator accessItArg) : type(typeArg), accessIt(accessItArg) {}
+	};
+
+	AccessQueue dramQueue;
+	//AccessQueue::iterator currentDramIt;
+
+	AccessQueue pcmQueue;
+	typedef map<addrint, PageEntry> PageMap;
+	PageMap *pages;
+
+
+
+
+public:
+	NewTwoLRUPolicy(
+        const string& nameArg,
+        Engine *engineArg,
+        uint64 debugStartArg,
+        uint64 dramPagesArg,
+        AllocationPolicy allocPolicyArg,
+        unsigned numPidsArg,
+        double maxFreeDramArg,
+        uint32 completeThresholdArg,
+        uint64 rollbackTimeoutArg,
+        unsigned numQueuesArg,
+        unsigned thresholdQueueArg,
+        uint64 lifetimeArg,
+        bool logicalTimeArg,
+        uint64 filterThresholdArg,
+        bool secondDemotionEvictionArg,
+        bool agingArg,
+        bool useHistoryArg,
+        bool usePendingListArg,
+        bool enableRollbackArg,
+        bool promotionFilterArg,
+        unsigned demotionAttemptsArg,
+		unsigned migrationThresholdArg);
+	PageType allocate(int pid, addrint addr, bool read, bool instr);
+	bool migrate(int pid, addrint addr);
+//	bool complete(int *pid, addrint *addr);
+//	bool rollback(int *pid, addrint *addr);
+	void done(int pid, addrint addr);
+	void monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress);
+	bool selectDemotionPage(int *pid, addrint *addr);
+};
+
+
 class MultiQueueMigrationPolicy : public BaseMigrationPolicy {
 	unsigned numQueues;
 	int thresholdQueue;
@@ -190,91 +269,6 @@ public:
 	void monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress);
 	bool selectDemotionPage(int *pid, addrint *addr);
 };
-
-
-class NewTwoLRUPolicy : public BaseMigrationPolicy {
-	unsigned numQueues;
-	int thresholdQueue;
-	uint64 lifetime;
-	bool logicalTime;
-	uint64 filterThreshold;
-	bool secondDemotionEviction;
-	bool aging;
-	bool useHistory;
-	bool usePendingList;
-	bool enableRollback;
-	bool promotionFilter;
-	unsigned demotionAttempts;
-	unsigned migrationThreshold;
-        
-        private:
-	struct AccessEntry {
-		int pid;
-		addrint addr;
-		unsigned hitCount;
-                bool migrating;
-		AccessEntry(int pidArg, addrint addrArg, int hitCountArg = 0, bool mig = false) : pid(pidArg), addr(addrArg),hitCount(hitCountArg), migrating(mig) {}
-	};
-
-	typedef list<AccessEntry> AccessQueue;
-
-	AccessQueue dramQueue;
-	//AccessQueue::iterator currentDramIt;
-
-	AccessQueue pcmQueue;
-
-	enum ListType {
-		DRAM_LIST,
-		PCM_LIST,
-	};
-
-	struct PageEntry {
-		ListType type;
-		AccessQueue::iterator accessIt;
-		PageEntry(ListType typeArg, AccessQueue::iterator accessItArg) : type(typeArg), accessIt(accessItArg) {}
-	};
-
-	typedef map<addrint, PageEntry> PageMap;
-
-	PageMap *pages;
-        
-       
-
-	//typedef map<addrint, PageEntry> PageMap;
-
-public:
-	NewTwoLRUPolicy(
-		const string& nameArg,
-		Engine *engineArg,
-		uint64 debugStartArg,
-		uint64 dramPagesArg,
-		AllocationPolicy allocPolicyArg,
-		unsigned numPidsArg,
-		double maxFreeDramArg,
-		uint32 completeThresholdArg,
-		uint64 rollbackTimeoutArg,
-		unsigned numQueuesArg,
-		unsigned thresholdQueueArg,
-		uint64 lifetimeArg,
-		bool logicalTimeArg,
-		uint64 filterThresholdArg,
-		bool secondDemotionEvictionArg,
-		bool agingArg,
-		bool useHistoryArg,
-		bool usePendingListArg,
-		bool enableRollbackArg,
-		bool promotionFilterArg,
-		unsigned demotionAttemptsArg,
-		unsigned migrationThresholdArg);
-	PageType allocate(int pid, addrint addr, bool read, bool instr);
-	bool migrate(int pid, addrint addr);
-//	bool complete(int *pid, addrint *addr);
-//	bool rollback(int *pid, addrint *addr);
-	void done(int pid, addrint addr);
-	void monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress);
-	bool selectDemotionPage(int *pid, addrint *addr);
-};
-
 
 
 //Old Migration Policies:
@@ -671,3 +665,4 @@ istream& operator>>(istream& lhs, AllocationPolicy& rhs);
 ostream& operator<<(ostream& lhs, AllocationPolicy rhs);
 
 #endif /* MIGRATION_H_ */
+
