@@ -659,10 +659,87 @@ public:
 
 };
 
+class ClockDWFMigrationPolicy : public BaseMigrationPolicy {
+	unsigned hotPageThreshold;
+	double readPercentage;
+
+        private:
+	struct AccessEntry {
+		int pid;
+		addrint addr;
+		unsigned frequencyCount;
+        bool ref;
+        bool dirty;
+        unsigned overlookedRotationCount;
+		AccessEntry(int pidArg, addrint addrArg, int frequencyCountArg = 0,int overlookedRotationCountArg=0
+		, bool refArg = false, bool dirtyArg=false) : pid(pidArg), addr(addrArg),
+		frequencyCount(frequencyCountArg),overlookedRotationCount(overlookedRotationCountArg),
+		 ref(refArg), dirty(dirtyArg) {}
+	};
+
+	typedef list<AccessEntry> AccessQueue;
+
+	AccessQueue dramQueue;
+	AccessQueue::iterator currentDramIt;
+
+	AccessQueue pcmQueue;
+	AccessQueue::iterator currentPcmIt;
+
+	enum ListType {
+		DRAM_LIST,
+		PCM_LIST,
+	};
+
+	struct PageEntry {
+		ListType type;
+		AccessQueue::iterator accessIt;
+		PageEntry(ListType typeArg, AccessQueue::iterator accessItArg) : type(typeArg), accessIt(accessItArg) {}
+	};
+
+	typedef map<addrint, PageEntry> PageMap;
+
+	PageMap *pages;
+        
+       
+
+	//typedef map<addrint, PageEntry> PageMap;
+
+public:
+	ClockDWFMigrationPolicy(
+		const string& nameArg,
+		Engine *engineArg,
+		uint64 debugStartArg,
+		uint64 dramPagesArg,
+		AllocationPolicy allocPolicyArg,
+		unsigned numPidsArg,
+		double maxFreeDramArg,
+		uint32 completeThresholdArg,
+		uint64 rollbackTimeoutArg,
+		unsigned numQueuesArg,
+		unsigned thresholdQueueArg,
+		uint64 lifetimeArg,
+		bool logicalTimeArg,
+		uint64 filterThresholdArg,
+		bool secondDemotionEvictionArg,
+		bool agingArg,
+		bool useHistoryArg,
+		bool usePendingListArg,
+		bool enableRollbackArg,
+		bool promotionFilterArg,
+		unsigned demotionAttemptsArg,
+		unsigned hotPageThresholdArg,
+		double readPercentage);
+	PageType allocate(int pid, addrint addr, bool read, bool instr);
+	bool migrate(int pid, addrint addr);
+	void done(int pid, addrint addr);
+	void monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress);
+	bool selectDemotionPage(int *pid, addrint *addr);
+};
+
+
 
 istream& operator>>(istream& lhs, AllocationPolicy& rhs);
 
 ostream& operator<<(ostream& lhs, AllocationPolicy rhs);
 
 #endif /* MIGRATION_H_ */
-

@@ -1802,3 +1802,74 @@ bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
     }
     return false;
 }
+
+
+
+
+ClockDWFMigrationPolicy::ClockDWFMigrationPolicy(
+        const string& nameArg,
+        Engine *engineArg,
+        uint64 debugStartArg,
+        uint64 dramPagesArg,
+        AllocationPolicy allocPolicyArg,
+        unsigned numPidsArg,
+        double maxFreeDramArg,
+        uint32 completeThresholdArg,
+        uint64 rollbackTimeoutArg,
+        unsigned numQueuesArg,
+        unsigned thresholdQueueArg,
+        uint64 lifetimeArg,
+        bool logicalTimeArg,
+        uint64 filterThresholdArg,
+        bool secondDemotionEvictionArg,
+        bool agingArg,
+        bool useHistoryArg,
+        bool usePendingListArg,
+        bool enableRollbackArg,
+        bool promotionFilterArg,
+        unsigned demotionAttemptsArg,
+        unsigned hotPageThresholdArg,
+        double readPercentageArg) :
+BaseMigrationPolicy(nameArg, engineArg, debugStartArg, dramPagesArg, allocPolicyArg, numPidsArg, maxFreeDramArg, completeThresholdArg, rollbackTimeoutArg),
+hotPageThreshold(hotPageThresholdArg),readPercentage(readPercentageArg)
+{
+    pages = new PageMap[numPids];
+    currentDramIt = dramQueue.begin();
+    currentPcmIt = pcmQueue.begin();
+}
+
+void ClockDWFMigrationPolicy::done(int pid, addrint addr) {
+
+}
+
+PageType ClockDWFMigrationPolicy::allocate(int pid, addrint addr, bool read, bool instr) {
+    int index = numPids == 1 ? 0 : pid;
+    AccessQueue::iterator accessIt;
+    ListType list;
+    PageType ret;
+    myassert(dramPagesLeft>=0);
+    if (read || dramPagesLeft==0) {
+        accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(pid, addr, 0,0,0,0));
+        list = PCM_LIST;
+        ret=PCM;
+        currentPcmIt++;
+    } else {
+        accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0,0,0,0));
+        list = DRAM_LIST;
+        ret=DRAM;
+        currentDramIt++;
+        dramPagesLeft--;
+        if (currentDramIt == dramQueue.end()) {
+            currentDramIt = dramQueue.begin();
+        }
+    }
+    bool ins = pages[index].emplace(addr, PageEntry(list, accessIt)).second;
+    myassert(ins);
+    return ret;
+}
+
+void ClockDWFMigrationPolicy::monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress) {
+}
+
+
+
