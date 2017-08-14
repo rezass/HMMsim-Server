@@ -1921,7 +1921,7 @@ bool ClockDWFMigrationPolicy::migrate(int pid, addrint addr) {
 }
 
 
-bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
+bool ClockDWFMigrationPolicy::selectDemotionPage(int *pid, addrint *addr) {
 
     if (dramPagesLeft <= 0) {
         if (dramQueue.size() < 1)
@@ -1941,12 +1941,13 @@ bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
         			*pid = currentDramIt->pid;
         			*addr = currentDramIt->addr;
         			PageMap::iterator it = pages[currentDramIt->pid].find(currentDramIt->addr);
-        			myassert(it != pages[dramIt->pid].end());
-        			myassert(it->second.accessIt == dramIt);
+        			myassert(it != pages[currentDramIt->pid].end());
+        			myassert(it->second.accessIt == currentDramIt);
         			cout<<"it->first: "<<it->first<<"  addr"<<addr<<endl;
         			it->second.type = PCM_LIST;
-        			it->second.accessIt = pcmQueue.emplace(pcmQueue.begin(), AccessEntry(0, it->first, 1,0,false,true));
-        			dramQueue.erase(dramIt);
+        			it->second.accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(0, it->first, 1,0,false,true));
+				++currentPcmIt;
+        			dramQueue.erase(currentDramIt);
         			dramPagesLeft++;
             		if (++currentDramIt == dramQueue.end()) {
                 		currentDramIt = dramQueue.begin();

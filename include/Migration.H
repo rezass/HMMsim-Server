@@ -666,9 +666,9 @@ class ClockDWFMigrationPolicy : public BaseMigrationPolicy {
 		int pid;
 		addrint addr;
 		unsigned frequencyCount;
+	unsigned overlookedRotationCount;
         bool ref;
         bool dirty;
-        unsigned overlookedRotationCount;
 		AccessEntry(int pidArg, addrint addrArg, int frequencyCountArg = 1,int overlookedRotationCountArg=0
 		, bool refArg = false, bool dirtyArg=false) : pid(pidArg), addr(addrArg),
 		frequencyCount(frequencyCountArg),overlookedRotationCount(overlookedRotationCountArg),
