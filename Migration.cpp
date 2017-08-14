@@ -1861,6 +1861,9 @@ PageType ClockDWFMigrationPolicy::allocate(int pid, addrint addr, bool read, boo
         if (currentDramIt == dramQueue.end()) {
             currentDramIt = dramQueue.begin();
         }
+        if(dramPagesLeft==0){
+        	dramFull=true;
+        }
     }
     bool ins = pages[index].emplace(addr, PageEntry(list, accessIt)).second;
     myassert(ins);

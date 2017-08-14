@@ -1,0 +1,11 @@
+-memory_organization hybrid
+-pcm_ranks 2
+-pcm_fractions 1
+-dram_ranks 2
+-dram_rows_per_bank 16384
+-pcm_rows_per_bank 16384
+-pcm_banks_per_rank 16
+-dram_banks_per_rank 16
+-migration_policy clock_dwf
+-dram_fractions 0.001401901
+-migration_threshold 128
