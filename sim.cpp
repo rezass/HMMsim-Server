@@ -167,6 +167,9 @@ int main(int argc, char * argv[]) {
 
     OptionalArgument<unsigned> migrationThreshold(&args, "migration_threshold", "number of numbers. mother of numbers", 10);
 
+    OptionalArgument<unsigned> hotPageThreshold(&args, "hot_page_threshold", "number of numbers. mother of numbers", 128);
+
+
 
     //Arguments for static partition policy
     OptionalArgument<string> dramFractions(&args, "dram_fractions", "string representing the fraction of dram space allocated to each process", "0.0078125"); //32MB for a 4GB system
@@ -383,8 +386,9 @@ int main(int argc, char * argv[]) {
             } else if (migrationPolicy.getValue() == "multi_queue") {
                 policies.emplace_back(new MultiQueueMigrationPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue()));
             } else if (migrationPolicy.getValue() == "new_two_lru") {
-                //cout << "BBBB"<<endl;
                 policies.emplace_back(new NewTwoLRUPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue(),migrationThreshold.getValue()));
+            }else if (migrationPolicy.getValue() == "clock_dwf") {
+                policies.emplace_back(new ClockDWFMigrationPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), pidsPerPolicy, maxFreeDram.getValue(), completeThreshold.getValue(), rollbackTimeout.getValue(), numQueues.getValue(), thresholdQueue.getValue(), lifetime.getValue(), logicalTime.getValue(), filterThreshold.getValue(), secondDemotionEviction.getValue(), aging.getValue(), history.getValue(), pendingList.getValue(), rollback.getValue(), promotionFilter.getValue(), demotionAttempts.getValue(),hotPageThreshold.getValue()));
             } else if (migrationPolicy.getValue() == "first_touch") {
                 //				policies.emplace_back(new FirstTouchMigrationPolicy(ossName.str(), &engine, debugStart.getValue(), partition->getDramPages(i), allocationPolicy.getValue(), allocator, pidsPerPolicy));
             } else if (migrationPolicy.getValue() == "double_clock") {

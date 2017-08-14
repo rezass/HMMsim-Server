@@ -1828,10 +1828,9 @@ ClockDWFMigrationPolicy::ClockDWFMigrationPolicy(
         bool enableRollbackArg,
         bool promotionFilterArg,
         unsigned demotionAttemptsArg,
-        unsigned hotPageThresholdArg,
-        double readPercentageArg) :
+        unsigned hotPageThresholdArg) :
 BaseMigrationPolicy(nameArg, engineArg, debugStartArg, dramPagesArg, allocPolicyArg, numPidsArg, maxFreeDramArg, completeThresholdArg, rollbackTimeoutArg),
-hotPageThreshold(hotPageThresholdArg),readPercentage(readPercentageArg)
+hotPageThreshold(hotPageThresholdArg)
 {
     pages = new PageMap[numPids];
     currentDramIt = dramQueue.begin();
@@ -1849,12 +1848,12 @@ PageType ClockDWFMigrationPolicy::allocate(int pid, addrint addr, bool read, boo
     PageType ret;
     myassert(dramPagesLeft>=0);
     if (read || dramPagesLeft==0) {
-        accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(pid, addr, 0,0,0,0));
+        accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(pid, addr, 0,1,0,0));
         list = PCM_LIST;
         ret=PCM;
         currentPcmIt++;
     } else {
-        accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0,0,0,0));
+        accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0,1,0,0));
         list = DRAM_LIST;
         ret=DRAM;
         currentDramIt++;
@@ -1869,7 +1868,106 @@ PageType ClockDWFMigrationPolicy::allocate(int pid, addrint addr, bool read, boo
 }
 
 void ClockDWFMigrationPolicy::monitor(const vector<CountEntry>& counts, const vector<ProgressEntry>& progress) {
+	    for (auto cit = counts.begin(); cit != counts.end(); ++cit) {
+        int index = numPids == 1 ? 0 : cit->pid;
+        PageMap::iterator it = pages[index].find(cit->page);
+        myassert(it != pages[index].end());
+        if (it->second.type == DRAM_LIST) {
+        	if(cit->writes > cit->reads)
+        		it->second.accessIt->dirty=true;
+            it->second.accessIt->ref = true;
+        } else if (it->second.type == PCM_LIST) {
+            if(cit->writes > cit->reads)
+        		it->second.accessIt->dirty=true;
+            it->second.accessIt->ref = true;
+        } else {
+            myassert(false);
+        }
+    }
+    BaseMigrationPolicy::monitor(counts, progress);
 }
+
+bool ClockDWFMigrationPolicy::migrate(int pid, addrint addr) {
+	if(dramPagesLeft==0)
+		return false;
+	if(dramPagesLeft<0)
+		myassert(false);
+    int index = numPids == 1 ? 0 : pid;
+    auto it = pages[index].find(addr);
+    myassert(it != pages[index].end());
+	myassert(it->second.type==PCM_LIST);
+    myassert(it->second.accessIt->pid == pid);
+    myassert(it->second.accessIt->addr == addr);
+    bool found = false;
+    AccessQueue::iterator pcmIt = pcmQueue.begin();
+    while (!found && pcmIt != pcmQueue.end()) {
+        myassert(pcmIt != pcmQueue.end());
+        if (pcmIt->addr == addr && pcmIt->dirty == true) {
+            found = true;       
+            pcmIt = pcmQueue.erase(pcmIt);
+        }
+        pcmIt++;
+    }
+    if (found) {
+            PageMap::iterator it = pages[pid].find(addr);
+            myassert(it != pages[pid].end());
+            it->second.type = DRAM_LIST;
+            it->second.accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0, 0, false, false));
+            dramPagesLeft--;
+            return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool NewTwoLRUPolicy::selectDemotionPage(int *pid, addrint *addr) {
+
+    if (dramPagesLeft <= 0) {
+        if (dramQueue.size() < 1)
+                myassert(false);
+        while(true){
+        	if(currentDramIt->dirty==false){
+        		hotPageThreshold=(hotPageThreshold*(dramPages-1)+
+        			dramQueue.begin()->frequencyCount)/dramPages;
+
+        		if(currentDramIt->frequencyCount>hotPageThreshold&&
+        			currentDramIt->overlookedRotationCount<8){
+        			currentDramIt->overlookedRotationCount++;
+        		}
+        		else{
+        			currentDramIt->dirty=true;
+
+        			*pid = currentDramIt->pid;
+        			*addr = currentDramIt->addr;
+        			PageMap::iterator it = pages[currentDramIt->pid].find(currentDramIt->addr);
+        			myassert(it != pages[dramIt->pid].end());
+        			myassert(it->second.accessIt == dramIt);
+        			cout<<"it->first: "<<it->first<<"  addr"<<addr<<endl;
+        			it->second.type = PCM_LIST;
+        			it->second.accessIt = pcmQueue.emplace(pcmQueue.begin(), AccessEntry(0, it->first, 1,0,false,true));
+        			dramQueue.erase(dramIt);
+        			dramPagesLeft++;
+            		if (++currentDramIt == dramQueue.end()) {
+                		currentDramIt = dramQueue.begin();
+            		}
+        			return true;
+        		}
+        	}
+        	else{
+        		currentDramIt->dirty=false;
+        		currentDramIt->frequencyCount++;
+        		currentDramIt->overlookedRotationCount=0;
+        	}
+        	if (++currentDramIt == dramQueue.end()) {
+                currentDramIt = dramQueue.begin();
+            }
+        }
+    }
+    return false;
+}
+
+
 
 
 

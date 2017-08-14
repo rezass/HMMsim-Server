@@ -661,8 +661,6 @@ public:
 
 class ClockDWFMigrationPolicy : public BaseMigrationPolicy {
 	unsigned hotPageThreshold;
-	double readPercentage;
-
         private:
 	struct AccessEntry {
 		int pid;
@@ -671,7 +669,7 @@ class ClockDWFMigrationPolicy : public BaseMigrationPolicy {
         bool ref;
         bool dirty;
         unsigned overlookedRotationCount;
-		AccessEntry(int pidArg, addrint addrArg, int frequencyCountArg = 0,int overlookedRotationCountArg=0
+		AccessEntry(int pidArg, addrint addrArg, int frequencyCountArg = 1,int overlookedRotationCountArg=0
 		, bool refArg = false, bool dirtyArg=false) : pid(pidArg), addr(addrArg),
 		frequencyCount(frequencyCountArg),overlookedRotationCount(overlookedRotationCountArg),
 		 ref(refArg), dirty(dirtyArg) {}
@@ -727,8 +725,7 @@ public:
 		bool enableRollbackArg,
 		bool promotionFilterArg,
 		unsigned demotionAttemptsArg,
-		unsigned hotPageThresholdArg,
-		double readPercentage);
+		unsigned hotPageThresholdArg);
 	PageType allocate(int pid, addrint addr, bool read, bool instr);
 	bool migrate(int pid, addrint addr);
 	void done(int pid, addrint addr);
