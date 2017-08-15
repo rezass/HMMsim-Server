@@ -1915,7 +1915,7 @@ bool ClockDWFMigrationPolicy::migrate(int pid, addrint addr) {
             PageMap::iterator it = pages[pid].find(addr);
             myassert(it != pages[pid].end());
             it->second.type = DRAM_LIST;
-            it->second.accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0, 0, false, false));
+            it->second.accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 1, 0, false, false));
             dramPagesLeft--;
             return true;
     } else {
@@ -1949,10 +1949,10 @@ bool ClockDWFMigrationPolicy::selectDemotionPage(int *pid, addrint *addr) {
         			cout<<"it->first: "<<it->first<<"  addr"<<addr<<endl;
         			it->second.type = PCM_LIST;
         			it->second.accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(0, it->first, 1,0,false,true));
-				++currentPcmIt;
+					++currentPcmIt;
         			dramQueue.erase(currentDramIt);
         			dramPagesLeft++;
-            		if (++currentDramIt == dramQueue.end()) {
+            		if (currentDramIt == dramQueue.end()) {
                 		currentDramIt = dramQueue.begin();
             		}
         			return true;
