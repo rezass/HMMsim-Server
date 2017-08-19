@@ -1848,12 +1848,12 @@ PageType ClockDWFMigrationPolicy::allocate(int pid, addrint addr, bool read, boo
     PageType ret;
     myassert(dramPagesLeft>=0);
     if (read || dramPagesLeft==0) {
-        accessIt = pcmQueue.emplace(currentPcmIt, AccessEntry(pid, addr, 0,1,0,0));
+    	accessIt = pcmQueue.emplace(pcmQueue.end(), AccessEntry(pid, addr, 1,0,0,read?0:1));
         list = PCM_LIST;
         ret=PCM;
         currentPcmIt++;
     } else {
-        accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 0,1,0,0));
+    	accessIt = dramQueue.emplace(currentDramIt, AccessEntry(pid, addr, 1,0,0,0));
         list = DRAM_LIST;
         ret=DRAM;
         currentDramIt++;

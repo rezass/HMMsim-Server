@@ -11,7 +11,7 @@
 ##############################################################
 
 # Debug
-DEBUG=1
+DEBUG=0
 
 # Print debug output
 DEBUG_OUTPUT = 0
@@ -65,7 +65,7 @@ include $(TOOLS_ROOT)/Config/makefile.default.rules
 
 
 # Flags
-CUSTOM_FLAGS += -MMD -DDEBUG=$(DEBUG_OUTPUT) -D_FILE_OFFSET_BITS=64 -std=c++11 -Wall -Werror -iquoteinclude 
+CUSTOM_FLAGS += -MMD -DDEBUG=$(DEBUG_OUTPUT) -D_FILE_OFFSET_BITS=64 -std=c++11 -Wall -Werror -iquoteinclude
 #CUSTOM_FLAGS += -D_GLIBCXX_DEBUG
 APP_CXXFLAGS += $(CUSTOM_FLAGS)
 APP_LIBS += -lbz2 -lz $(CUSTOM_LINK)
